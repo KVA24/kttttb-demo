@@ -385,6 +385,19 @@ body {
   margin: 8px 0;
 }
 
+.footer code {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+}
+
+.config-hint {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .verification-flow {

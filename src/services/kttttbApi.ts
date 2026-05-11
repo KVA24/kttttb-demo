@@ -11,18 +11,18 @@ import type {
   ApiHeaders,
 } from '../types/api';
 import { generateSignature, generateTimestamp } from '../utils/signature';
+import { getTenantCode, getBusinessCode, getSecretKey } from '../utils/urlParams';
 
 const BASE_URL = 'https://dev-pubapi-kttttb.wiinvent-tv.com';
 
-// Configuration - Update these with your actual credentials
-// You can set these in .env file:
-// VITE_TENANT_CODE=your_code
-// VITE_BUSINESS_CODE=your_code
-// VITE_SECRET_KEY=your_key
+// Configuration priority:
+// 1. URL params (tenantCode, businessCode)
+// 2. Environment variables (.env file)
+// 3. Default values
 const API_CONFIG = {
-  tenantCode: import.meta.env.VITE_TENANT_CODE || 'YOUR_TENANT_CODE',
-  businessCode: import.meta.env.VITE_BUSINESS_CODE || 'YOUR_BUSINESS_CODE',
-  secretKey: import.meta.env.VITE_SECRET_KEY || 'YOUR_SECRET_KEY',
+  tenantCode: getTenantCode(),
+  businessCode: getBusinessCode(),
+  secretKey: getSecretKey(),
 };
 
 class KTTTTBApiService {

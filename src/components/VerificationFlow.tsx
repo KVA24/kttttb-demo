@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { kttttbApi } from '../services/kttttbApi';
 import { generateRequestId } from '../utils/signature';
+import { getTenantCode, getBusinessCode } from '../utils/urlParams';
 import type { ErrorResponse, ParamDetail } from '../types/api';
 import './VerificationFlow.css';
 
@@ -238,7 +239,7 @@ export function VerificationFlow() {
               <input
                 id="phone"
                 type="tel"
-                placeholder="0389916092"
+                placeholder="Nhập số điện thoại"
                 value={state.phoneNumber}
                 onChange={(e) =>
                   setState((prev) => ({ ...prev, phoneNumber: e.target.value, error: null }))
@@ -437,6 +438,12 @@ export function VerificationFlow() {
       <div className="footer">
         <p>
           <strong>API Endpoints:</strong> dev-pubapi-kttttb.wiinvent-tv.com
+        </p>
+        <p>
+          <strong>Tenant:</strong> {getTenantCode()} | <strong>Business:</strong> {getBusinessCode()}
+        </p>
+        <p className="config-hint">
+          💡 Tip: Add <code>?tenantCode=XXX&businessCode=YYY</code> to URL to override config
         </p>
       </div>
     </div>

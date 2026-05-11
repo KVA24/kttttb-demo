@@ -31,21 +31,78 @@ Demo web React để giả lập luồng xác thực thông tin thuê bao theo t
 npm install
 \`\`\`
 
-### Cấu hình API credentials
+## ⚙️ Configuration Guide
+
+### Configuration Priority
+
+Ứng dụng sẽ đọc cấu hình theo thứ tự ưu tiên:
+
+1. **URL Parameters** (Highest priority)
+2. **Environment Variables** (.env file)
+3. **Default Values** (Lowest priority)
+
+### Method 1: URL Parameters (Recommended for testing)
+
+Thêm parameters vào URL:
+
+```
+http://localhost:3000?tenantCode=YOUR_TENANT&businessCode=YOUR_BUSINESS
+```
+
+**Supported parameters:**
+- `tenantCode` hoặc `tenant_code`
+- `businessCode` hoặc `business_code`
+
+**Examples:**
+```
+# CamelCase
+http://localhost:3000?tenantCode=ABC123&businessCode=PHT
+
+# Snake_case
+http://localhost:3000?tenant_code=ABC123&business_code=PHT
+
+# Mixed
+http://localhost:3000?tenantCode=ABC123&business_code=PHT
+```
+
+**Advantages:**
+- ✅ Không cần restart server
+- ✅ Dễ dàng test nhiều tenant khác nhau
+- ✅ Không cần sửa code hay .env
+- ✅ Có thể share URL với config cụ thể
+
+### Method 2: Environment Variables
 
 1. Copy file `.env.example` thành `.env`:
-\`\`\`bash
+```bash
 cp .env.example .env
-\`\`\`
+```
 
-2. Mở file `.env` và điền thông tin xác thực của bạn:
-\`\`\`env
+2. Mở file `.env` và điền thông tin:
+```env
 VITE_TENANT_CODE=your_tenant_code
 VITE_BUSINESS_CODE=your_business_code
 VITE_SECRET_KEY=your_secret_key
-\`\`\`
+```
 
-**Lưu ý:** Nếu không có credentials, bạn có thể để giá trị mặc định nhưng API sẽ trả về lỗi xác thực.
+3. Restart dev server:
+```bash
+npm run dev
+```
+
+**Advantages:**
+- ✅ Persistent configuration
+- ✅ Không hiển thị trong URL
+- ✅ Phù hợp cho development
+
+### Method 3: Default Values
+
+Nếu không có URL params và env vars, sẽ dùng giá trị mặc định:
+- `TENANT_CODE`: "YOUR_TENANT_CODE"
+- `BUSINESS_CODE`: "YOUR_BUSINESS_CODE"
+- `SECRET_KEY`: "YOUR_SECRET_KEY"
+
+**Note:** API sẽ trả về lỗi xác thực với giá trị mặc định.
 
 ### Chạy development server
 
