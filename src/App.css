@@ -1,0 +1,53 @@
+.app {
+  min-height: 100vh;
+}
+
+.view-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-btn {
+  padding: 10px 20px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #667eea;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.toggle-btn:hover {
+  background: #f3f4f6;
+}
+
+.toggle-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: transparent;
+}
+
+@media (max-width: 640px) {
+  .view-toggle {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    justify-content: center;
+  }
+
+  .toggle-btn {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+}
