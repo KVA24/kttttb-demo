@@ -152,10 +152,14 @@ export function VerificationFlow() {
   // Available field options
   const availableFieldOptions = [
     { code: 'id_no', label: 'Số CMND/CCCD' },
-    { code: 'full_name', label: 'Họ và tên' },
-    { code: 'dob', label: 'Ngày sinh' },
-    { code: 'address', label: 'Địa chỉ' },
-    { code: 'email', label: 'Email' },
+    { code: 'customer_full_name', label: 'Họ và tên đầy đủ' },
+    { code: 'birth_day', label: 'Ngày sinh' },
+    { code: 'id_issue_date', label: 'Ngày cấp CMND/CCCD' },
+    { code: 'gender', label: 'Giới tính' },
+    { code: 'nationality', label: 'Quốc tịch' },
+    { code: 'permanent_address', label: 'Địa chỉ thường trú' },
+    { code: 'id_expiry_date', label: 'Ngày hết hạn CCCD' },
+    { code: 'id_issue_place', label: 'Nơi cấp CCCD' },
   ];
 
   // Get available options for a specific index (exclude already selected)

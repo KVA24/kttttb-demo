@@ -14,7 +14,7 @@ body {
 }
 
 .verification-flow {
-  max-width: 700px;
+  max-width: 1024px;
   margin: 0 auto;
   padding: 20px;
   min-height: 100vh;
@@ -162,7 +162,7 @@ body {
 }
 
 .param-row select {
-  flex: 0 0 180px;
+  flex: 0 0 220px;
 }
 
 .param-row input {
