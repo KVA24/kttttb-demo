@@ -11,19 +11,8 @@ import type {
   ApiHeaders,
 } from '../types/api';
 import { generateSignature, generateTimestamp } from '../utils/signature';
-import { getTenantCode, getBusinessCode, getSecretKey } from '../utils/urlParams';
 
 const BASE_URL = 'https://dev-pubapi-kttttb.wiinvent-tv.com';
-
-// Configuration priority:
-// 1. URL params (tenantCode, businessCode)
-// 2. Environment variables (.env file)
-// 3. Default values
-const API_CONFIG = {
-  tenantCode: getTenantCode(),
-  businessCode: getBusinessCode(),
-  secretKey: getSecretKey(),
-};
 
 class KTTTTBApiService {
   private tenantCode: string;
@@ -31,6 +20,13 @@ class KTTTTBApiService {
   private secretKey: string;
 
   constructor(tenantCode: string, businessCode: string, secretKey: string) {
+    this.tenantCode = tenantCode;
+    this.businessCode = businessCode;
+    this.secretKey = secretKey;
+  }
+
+  // Update configuration
+  updateConfig(tenantCode: string, businessCode: string, secretKey: string) {
     this.tenantCode = tenantCode;
     this.businessCode = businessCode;
     this.secretKey = secretKey;
@@ -125,9 +121,18 @@ class KTTTTBApiService {
   }
 }
 
-// Export singleton instance
+// Default configuration from env or defaults
+const DEFAULT_CONFIG = {
+  tenantCode: import.meta.env.VITE_TENANT_CODE || 'MB',
+  businessCode: import.meta.env.VITE_BUSINESS_CODE || 'PHT',
+  secretKey: import.meta.env.VITE_SECRET_KEY || '1e112e3a364fd3a5454f4e98d8e908d1eb14ce32fa659961b1c99969c3e73813',
+};
+
+// Export singleton instance with default config
 export const kttttbApi = new KTTTTBApiService(
-  API_CONFIG.tenantCode,
-  API_CONFIG.businessCode,
-  API_CONFIG.secretKey
+  DEFAULT_CONFIG.tenantCode,
+  DEFAULT_CONFIG.businessCode,
+  DEFAULT_CONFIG.secretKey
 );
+
+export { DEFAULT_CONFIG };

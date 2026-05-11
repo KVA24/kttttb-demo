@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { kttttbApi } from '../services/kttttbApi';
+import { kttttbApi, DEFAULT_CONFIG } from '../services/kttttbApi';
 import { generateRequestId } from '../utils/signature';
-import { getTenantCode, getBusinessCode } from '../utils/urlParams';
 import type { ErrorResponse, ParamDetail } from '../types/api';
 import './VerificationFlow.css';
 
@@ -25,6 +24,12 @@ interface VerificationState {
   error: string | null;
 }
 
+interface ConfigState {
+  tenantCode: string;
+  businessCode: string;
+  secretKey: string;
+}
+
 export function VerificationFlow() {
   const [state, setState] = useState<VerificationState>({
     step: 'phone',
@@ -39,6 +44,21 @@ export function VerificationFlow() {
     loading: false,
     error: null,
   });
+
+  const [config, setConfig] = useState<ConfigState>({
+    tenantCode: DEFAULT_CONFIG.tenantCode,
+    businessCode: DEFAULT_CONFIG.businessCode,
+    secretKey: DEFAULT_CONFIG.secretKey,
+  });
+
+  const [showConfig, setShowConfig] = useState(false);
+
+  // Update API config when config changes
+  const updateApiConfig = () => {
+    kttttbApi.updateConfig(config.tenantCode, config.businessCode, config.secretKey);
+    setShowConfig(false);
+    setState((prev) => ({ ...prev, error: null }));
+  };
 
   const handleError = (error: any) => {
     const errorResponse = error as ErrorResponse;
@@ -436,15 +456,62 @@ export function VerificationFlow() {
       </div>
 
       <div className="footer">
-        <p>
-          <strong>API Endpoints:</strong> dev-pubapi-kttttb.wiinvent-tv.com
-        </p>
-        <p>
-          <strong>Tenant:</strong> {getTenantCode()} | <strong>Business:</strong> {getBusinessCode()}
-        </p>
-        <p className="config-hint">
-          💡 Tip: Add <code>?tenantCode=XXX&businessCode=YYY</code> to URL to override config
-        </p>
+        <div className="footer-content">
+          <p>
+            <strong>API Endpoints:</strong> dev-pubapi-kttttb.wiinvent-tv.com
+          </p>
+          
+          <button 
+            className="config-toggle-btn"
+            onClick={() => setShowConfig(!showConfig)}
+          >
+            ⚙️ {showConfig ? 'Ẩn' : 'Hiện'} Configuration
+          </button>
+
+          {showConfig && (
+            <div className="config-panel">
+              <div className="config-row">
+                <label htmlFor="tenantCode">Tenant Code:</label>
+                <input
+                  id="tenantCode"
+                  type="text"
+                  value={config.tenantCode}
+                  onChange={(e) => setConfig({ ...config, tenantCode: e.target.value })}
+                  placeholder="YOUR_TENANT_CODE"
+                />
+              </div>
+
+              <div className="config-row">
+                <label htmlFor="businessCode">Business Code:</label>
+                <input
+                  id="businessCode"
+                  type="text"
+                  value={config.businessCode}
+                  onChange={(e) => setConfig({ ...config, businessCode: e.target.value })}
+                  placeholder="YOUR_BUSINESS_CODE"
+                />
+              </div>
+
+              <div className="config-row">
+                <label htmlFor="secretKey">Secret Key:</label>
+                <input
+                  id="secretKey"
+                  type="text"
+                  value={config.secretKey}
+                  onChange={(e) => setConfig({ ...config, secretKey: e.target.value })}
+                  placeholder="YOUR_SECRET_KEY"
+                />
+              </div>
+
+              <button 
+                className="config-apply-btn"
+                onClick={updateApiConfig}
+              >
+                ✓ Áp dụng
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
