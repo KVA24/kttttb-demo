@@ -389,14 +389,24 @@ body {
 @media (max-width: 640px) {
   .verification-flow {
     padding: 10px;
+    padding-top: 80px;
   }
 
   .card {
     padding: 24px;
   }
 
+  .header {
+    margin-bottom: 20px;
+    padding: 10px 0;
+  }
+
   .header h1 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 0.95rem;
   }
 
   .progress-bar {

@@ -167,6 +167,16 @@
 @media (max-width: 640px) {
   .api-docs {
     padding: 10px;
+    padding-top: 80px;
+    margin-top: 0;
+  }
+
+  .docs-header {
+    margin-bottom: 20px;
+  }
+
+  .docs-header h2 {
+    font-size: 1.5rem;
   }
 
   .tab-content,
