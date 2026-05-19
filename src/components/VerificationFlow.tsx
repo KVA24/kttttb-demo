@@ -183,6 +183,10 @@ export function VerificationFlow() {
     }));
   };
 
+  const isDateField = (code: string) => {
+    return ['birth_day', 'id_issue_date', 'id_expiry_date'].includes(code);
+  };
+
   const updateParamDetail = (index: number, field: 'code' | 'value', value: string) => {
     setState((prev) => ({
       ...prev,
@@ -277,8 +281,8 @@ export function VerificationFlow() {
                       )}
                     </select>
                     <input
-                      type="text"
-                      placeholder="Nhập giá trị"
+                      type={isDateField(param.code) ? 'date' : 'text'}
+                      placeholder={isDateField(param.code) ? 'YYYY-MM-DD' : 'Nhập giá trị'}
                       value={param.value}
                       onChange={(e) => updateParamDetail(index, 'value', e.target.value)}
                       disabled={state.loading}
