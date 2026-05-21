@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { kttttbApi } from '../services/kttttbApi';
 import { generateRequestId } from '../utils/signature';
 import type { ErrorResponse, ParamDetail } from '../types/api';
 import './VerificationFlow.css';
 
-type Step = 'phone' | 'otp' | 'data' | 'result';
+type Step = 'phone' | 'otp' | 'result';
 
 interface VerificationState {
   step: Step;
@@ -22,6 +22,9 @@ interface VerificationState {
   }>;
   loading: boolean;
   error: string | null;
+  otpTimeLeft: number;
+  otpExpired: boolean;
+  fieldErrors: Record<string, string>;
 }
 
 export function VerificationFlow() {
@@ -33,11 +36,31 @@ export function VerificationFlow() {
     consentRef: '',
     expireTime: '',
     timeToLife: 0,
-    paramDetails: [{ code: 'id_no', value: '' }],
+    paramDetails: [{ code: 'customer_full_name', value: '' }],
     validationResults: [],
     loading: false,
     error: null,
+    otpTimeLeft: 60,
+    otpExpired: false,
+    fieldErrors: {},
   });
+
+  // OTP Countdown Timer
+  useEffect(() => {
+    if (state.step !== 'otp' || state.otpExpired) return;
+
+    const timer = setInterval(() => {
+      setState((prev) => {
+        const newTimeLeft = prev.otpTimeLeft - 1;
+        if (newTimeLeft <= 0) {
+          return { ...prev, otpTimeLeft: 0, otpExpired: true };
+        }
+        return { ...prev, otpTimeLeft: newTimeLeft };
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [state.step, state.otpExpired]);
 
 
 
@@ -51,12 +74,28 @@ export function VerificationFlow() {
   };
 
   const handleGetOtp = async () => {
-    if (!state.phoneNumber || state.phoneNumber.length < 10) {
-      setState((prev) => ({ ...prev, error: 'Vui lòng nhập số điện thoại hợp lệ' }));
+    const errors: Record<string, string> = {};
+
+    if (!state.phoneNumber) {
+      errors['phoneNumber'] = 'Vui lòng nhập số điện thoại hợp lệ';
+    }
+
+    // Validate all fields are filled
+    state.paramDetails.forEach((p, index) => {
+      if (!p.code) {
+        errors[`paramCode_${index}`] = 'Vui lòng chọn loại thông tin';
+      }
+      if (!p.value.trim()) {
+        errors[`paramValue_${index}`] = 'Vui lòng nhập giá trị';
+      }
+    });
+
+    if (Object.keys(errors).length > 0) {
+      setState((prev) => ({ ...prev, fieldErrors: errors }));
       return;
     }
 
-    setState((prev) => ({ ...prev, loading: true, error: null }));
+    setState((prev) => ({ ...prev, loading: true, error: null, fieldErrors: {} }));
 
     try {
       const response = await kttttbApi.getOtp({
@@ -70,6 +109,8 @@ export function VerificationFlow() {
         sessionOtp: response.data!.sessionOtp,
         step: 'otp',
         loading: false,
+        otpTimeLeft: 60,
+        otpExpired: false,
       }));
     } catch (error) {
       handleError(error);
@@ -79,6 +120,11 @@ export function VerificationFlow() {
   const handleVerifyOtp = async () => {
     if (!state.otp || state.otp.length !== 6) {
       setState((prev) => ({ ...prev, error: 'Vui lòng nhập mã OTP 6 số' }));
+      return;
+    }
+
+    if (state.otpExpired) {
+      setState((prev) => ({ ...prev, error: 'Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới' }));
       return;
     }
 
@@ -92,39 +138,20 @@ export function VerificationFlow() {
         sessionOtp: state.sessionOtp,
       });
 
-      setState((prev) => ({
-        ...prev,
-        consentRef: response.data!.consentRef,
-        expireTime: response.data!.expireTime,
-        timeToLife: response.data!.timeToLife,
-        step: 'data',
-        loading: false,
-      }));
-    } catch (error) {
-      handleError(error);
-    }
-  };
-
-  const handleGetData = async () => {
-    const hasEmptyValue = state.paramDetails.some((p) => !p.value.trim());
-    if (hasEmptyValue) {
-      setState((prev) => ({ ...prev, error: 'Vui lòng nhập đầy đủ thông tin' }));
-      return;
-    }
-
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-
-    try {
-      const response = await kttttbApi.getData({
+      // After OTP verification, immediately get data
+      const dataResponse = await kttttbApi.getData({
         requestId: generateRequestId(),
         msisdn: state.phoneNumber,
-        consentRef: state.consentRef,
+        consentRef: response.data!.consentRef,
         paramDetail: state.paramDetails,
       });
 
       setState((prev) => ({
         ...prev,
-        validationResults: response.data!.results,
+        consentRef: response.data!.consentRef,
+        expireTime: response.data!.expireTime,
+        timeToLife: response.data!.timeToLife,
+        validationResults: dataResponse.data!.results,
         step: 'result',
         loading: false,
       }));
@@ -142,17 +169,20 @@ export function VerificationFlow() {
       consentRef: '',
       expireTime: '',
       timeToLife: 0,
-      paramDetails: [{ code: 'id_no', value: '' }],
+      paramDetails: [{ code: 'customer_full_name', value: '' }],
       validationResults: [],
       loading: false,
       error: null,
+      otpTimeLeft: 60,
+      otpExpired: false,
+      fieldErrors: {},
     });
   };
 
   // Available field options
   const availableFieldOptions = [
+    { code: 'customer_full_name', label: 'Họ và tên' },
     { code: 'id_no', label: 'Số CMND/CCCD' },
-    { code: 'customer_full_name', label: 'Họ và tên đầy đủ' },
     { code: 'birth_day', label: 'Ngày sinh' },
     { code: 'id_issue_date', label: 'Ngày cấp CMND/CCCD' },
     { code: 'gender', label: 'Giới tính' },
@@ -211,19 +241,14 @@ export function VerificationFlow() {
       </div>
 
       <div className="progress-bar">
-        <div className={`progress-step ${state.step === 'phone' ? 'active' : ''} ${['otp', 'data', 'result'].includes(state.step) ? 'completed' : ''}`}>
+        <div className={`progress-step ${state.step === 'phone' ? 'active' : ''} ${['otp', 'result'].includes(state.step) ? 'completed' : ''}`}>
           <div className="step-number">1</div>
           <div className="step-label">Nhập SĐT</div>
         </div>
         <div className="progress-line"></div>
-        <div className={`progress-step ${state.step === 'otp' ? 'active' : ''} ${['data', 'result'].includes(state.step) ? 'completed' : ''}`}>
+        <div className={`progress-step ${state.step === 'otp' ? 'active' : ''} ${state.step === 'result' ? 'completed' : ''}`}>
           <div className="step-number">2</div>
           <div className="step-label">Xác thực OTP</div>
-        </div>
-        <div className="progress-line"></div>
-        <div className={`progress-step ${state.step === 'data' ? 'active' : ''} ${state.step === 'result' ? 'completed' : ''}`}>
-          <div className="step-number">3</div>
-          <div className="step-label">Lấy dữ liệu</div>
         </div>
       </div>
 
@@ -251,52 +276,91 @@ export function VerificationFlow() {
                 placeholder="Nhập số điện thoại"
                 value={state.phoneNumber}
                 onChange={(e) =>
-                  setState((prev) => ({ ...prev, phoneNumber: e.target.value, error: null }))
+                  setState((prev) => ({ 
+                    ...prev, 
+                    phoneNumber: e.target.value, 
+                    error: null,
+                    fieldErrors: { ...prev.fieldErrors, phoneNumber: '' }
+                  }))
                 }
                 disabled={state.loading}
+                className={state.fieldErrors['phoneNumber'] ? 'input-error' : ''}
               />
+              {state.fieldErrors['phoneNumber'] && (
+                <span className="field-error-message">{state.fieldErrors['phoneNumber']}</span>
+              )}
             </div>
 
             <div className="form-group">
-              <label>Thông tin cần xác thực</label>
+              <label>Thông tin cần xác thực <span className="required">*</span></label>
               {state.paramDetails.map((param, index) => {
                 const availableOptions = getAvailableOptions(index);
+                const codeError = state.fieldErrors[`paramCode_${index}`];
+                const valueError = state.fieldErrors[`paramValue_${index}`];
                 return (
                   <div key={index} className="param-row">
-                    <select
-                      value={param.code}
-                      onChange={(e) => updateParamDetail(index, 'code', e.target.value)}
-                      disabled={state.loading}
-                    >
-                      <option value="">-- Chọn loại thông tin --</option>
-                      {availableOptions.map((opt) => (
-                        <option key={opt.code} value={opt.code}>
-                          {opt.label}
-                        </option>
-                      ))}
-                      {param.code && !availableOptions.find((o) => o.code === param.code) && (
-                        <option value={param.code}>
-                          {availableFieldOptions.find((o) => o.code === param.code)?.label}
-                        </option>
-                      )}
-                    </select>
-                    <input
-                      type={isDateField(param.code) ? 'date' : 'text'}
-                      placeholder={isDateField(param.code) ? 'YYYY-MM-DD' : 'Nhập giá trị'}
-                      value={param.value}
-                      onChange={(e) => updateParamDetail(index, 'value', e.target.value)}
-                      disabled={state.loading}
-                    />
-                    {state.paramDetails.length > 1 && (
-                      <button
-                        type="button"
-                        className="btn-icon"
-                        onClick={() => removeParamDetail(index)}
+                    <div className="param-field">
+                      <select
+                        value={param.code}
+                        onChange={(e) => {
+                          updateParamDetail(index, 'code', e.target.value);
+                          setState((prev) => ({
+                            ...prev,
+                            fieldErrors: { ...prev.fieldErrors, [`paramCode_${index}`]: '' }
+                          }));
+                        }}
                         disabled={state.loading}
+                        required
+                        className={codeError ? 'input-error' : ''}
                       >
-                        ✕
-                      </button>
-                    )}
+                        <option value="">-- Chọn loại thông tin --</option>
+                        {availableOptions.map((opt) => (
+                          <option key={opt.code} value={opt.code}>
+                            {opt.label}
+                          </option>
+                        ))}
+                        {param.code && !availableOptions.find((o) => o.code === param.code) && (
+                          <option value={param.code}>
+                            {availableFieldOptions.find((o) => o.code === param.code)?.label}
+                          </option>
+                        )}
+                      </select>
+                      {codeError && (
+                        <span className="field-error-message">{codeError}</span>
+                      )}
+                    </div>
+                    <div className="param-field">
+                      <input
+                        type={isDateField(param.code) ? 'date' : 'text'}
+                        placeholder={isDateField(param.code) ? 'YYYY-MM-DD' : 'Nhập giá trị'}
+                        value={param.value}
+                        onChange={(e) => {
+                          updateParamDetail(index, 'value', e.target.value);
+                          setState((prev) => ({
+                            ...prev,
+                            fieldErrors: { ...prev.fieldErrors, [`paramValue_${index}`]: '' }
+                          }));
+                        }}
+                        disabled={state.loading}
+                        required
+                        className={valueError ? 'input-error' : ''}
+                      />
+                      {valueError && (
+                        <span className="field-error-message">{valueError}</span>
+                      )}
+                    </div>
+                    <div>
+                      {state.paramDetails.length > 1 && (
+                        <button
+                          type="button"
+                          className="btn-icon"
+                          onClick={() => removeParamDetail(index)}
+                          disabled={state.loading}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -328,12 +392,22 @@ export function VerificationFlow() {
               Mã OTP đã được gửi đến số điện thoại <strong>{state.phoneNumber}</strong>
             </p>
 
+            {state.otpExpired && (
+              <div className="alert alert-warning">
+                <span className="alert-icon">⏰</span>
+                Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.
+              </div>
+            )}
+
             <div className="info-box">
               <div>Session OTP: <code>{state.sessionOtp}</code></div>
+              <div className={`otp-timer ${state.otpTimeLeft <= 10 ? 'warning' : ''} ${state.otpExpired ? 'expired' : ''}`}>
+                ⏱ Thời gian còn lại: <strong>{state.otpTimeLeft}s</strong>
+              </div>
             </div>
 
             <div className="form-group">
-              <label htmlFor="otp">Mã OTP</label>
+              <label htmlFor="otp">Mã OTP <span className="required">*</span></label>
               <input
                 id="otp"
                 type="text"
@@ -343,14 +417,15 @@ export function VerificationFlow() {
                 onChange={(e) =>
                   setState((prev) => ({ ...prev, otp: e.target.value.replace(/\D/g, ''), error: null }))
                 }
-                disabled={state.loading}
+                disabled={state.loading || state.otpExpired}
+                required
               />
             </div>
 
             <div className="button-group">
               <button
                 className="btn-secondary"
-                onClick={() => setState((prev) => ({ ...prev, step: 'phone', error: null }))}
+                onClick={() => setState((prev) => ({ ...prev, step: 'phone', error: null, otpTimeLeft: 60, otpExpired: false }))}
                 disabled={state.loading}
               >
                 ← Quay lại
@@ -358,7 +433,7 @@ export function VerificationFlow() {
               <button
                 className="btn-primary"
                 onClick={handleVerifyOtp}
-                disabled={state.loading}
+                disabled={state.loading || state.otpExpired}
               >
                 {state.loading ? 'Đang xác thực...' : 'Xác thực OTP'}
               </button>
@@ -366,12 +441,12 @@ export function VerificationFlow() {
           </div>
         )}
 
-        {/* Step 3: Get Data */}
-        {state.step === 'data' && (
+        {/* Step 3: Results */}
+        {state.step === 'result' && (
           <div className="step-content">
-            <h2>Bước 3: Lấy dữ liệu xác thực</h2>
+            <h2>✅ Kết quả xác thực</h2>
             <p className="step-description">
-              Xác thực thành công! Bạn có thể lấy dữ liệu xác thực ngay bây giờ.
+              Dưới đây là kết quả đối chiếu thông tin
             </p>
 
             <div className="info-box success">
@@ -379,43 +454,6 @@ export function VerificationFlow() {
               <div><strong>⏱ Thời gian sống:</strong> {state.timeToLife} phút</div>
               <div><strong>📅 Hết hạn:</strong> {new Date(state.expireTime).toLocaleString('vi-VN')}</div>
             </div>
-
-            <div className="form-group">
-              <label>Thông tin đã đăng ký xác thực</label>
-              {state.paramDetails.map((param, index) => (
-                <div key={index} className="param-display">
-                  <span className="param-code">{param.code}:</span>
-                  <span className="param-value">{param.value}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="button-group">
-              <button
-                className="btn-secondary"
-                onClick={handleReset}
-                disabled={state.loading}
-              >
-                🔄 Bắt đầu lại
-              </button>
-              <button
-                className="btn-primary"
-                onClick={handleGetData}
-                disabled={state.loading}
-              >
-                {state.loading ? 'Đang lấy dữ liệu...' : 'Lấy dữ liệu'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 4: Results */}
-        {state.step === 'result' && (
-          <div className="step-content">
-            <h2>✅ Kết quả xác thực</h2>
-            <p className="step-description">
-              Dưới đây là kết quả đối chiếu thông tin
-            </p>
 
             <div className="results">
               {state.validationResults.map((result, index) => (
@@ -430,7 +468,7 @@ export function VerificationFlow() {
                     <div className="result-code">{result.code}</div>
                     <div className="result-message">{result.statusMessage}</div>
                     <div className="result-status">
-                      Trạng thái: <strong>{result.status === 1 ? 'Khớp' : 'Không khớp'}</strong>
+                      Trạng thái: <strong>{result.status === 1 ? 'Khớp ✓' : 'Không khớp ✗'}</strong>
                     </div>
                   </div>
                 </div>

@@ -120,6 +120,7 @@ body {
 
 /* Form Elements */
 .form-group {
+  margin-top: 24px;
   margin-bottom: 24px;
 }
 
@@ -129,6 +130,26 @@ body {
   color: #374151;
   font-weight: 600;
   font-size: 0.95rem;
+}
+
+.required {
+  color: #ef4444;
+  margin-left: 4px;
+}
+
+/* Field Error Message */
+.field-error-message {
+  display: block;
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* Param Field Wrapper */
+.param-field {
+  flex: 1;
+  position: relative;
 }
 
 .form-group input,
@@ -141,11 +162,23 @@ body {
   transition: all 0.2s ease;
 }
 
+.form-group input.input-error,
+.form-group select.input-error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group input.input-error:focus,
+.form-group select.input-error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
 .form-group input:disabled,
@@ -158,7 +191,8 @@ body {
 .param-row {
   display: flex;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
+  align-items: flex-start;
 }
 
 .param-row select {
@@ -271,6 +305,12 @@ body {
   border: 1px solid #fecaca;
 }
 
+.alert-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
 .alert-icon {
   font-size: 1.5rem;
 }
@@ -302,6 +342,38 @@ body {
 
 .info-box div {
   margin: 4px 0;
+}
+
+/* OTP Timer */
+.otp-timer {
+  padding: 12px;
+  background: #eff6ff;
+  border-radius: 6px;
+  color: #1e40af;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 12px;
+  transition: all 0.3s ease;
+}
+
+.otp-timer.warning {
+  background: #fef3c7;
+  color: #92400e;
+  animation: pulse 1s infinite;
+}
+
+.otp-timer.expired {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* Results */

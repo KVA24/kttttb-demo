@@ -136,6 +136,42 @@
   font-family: 'Courier New', monospace;
 }
 
+.secret-key-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.secret-key-wrapper input {
+  flex: 1;
+}
+
+.toggle-visibility-btn {
+  padding: 10px 12px;
+  background: #f3f4f6;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+}
+
+.toggle-visibility-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.toggle-visibility-btn:active {
+  transform: scale(0.95);
+}
+
 .apply-btn {
   width: 100%;
   padding: 12px;
