@@ -250,6 +250,11 @@ export function VerificationFlow() {
           <div className="step-number">2</div>
           <div className="step-label">Xác thực OTP</div>
         </div>
+        <div className="progress-line"></div>
+        <div className={`progress-step ${state.step === 'result' ? 'active' : ''}`}>
+          <div className="step-number">3</div>
+          <div className="step-label">Kết quả</div>
+        </div>
       </div>
 
       <div className="card">
@@ -444,7 +449,7 @@ export function VerificationFlow() {
         {/* Step 3: Results */}
         {state.step === 'result' && (
           <div className="step-content">
-            <h2>✅ Kết quả xác thực</h2>
+            <h2>Bước 3: Kết quả xác thực</h2>
             <p className="step-description">
               Dưới đây là kết quả đối chiếu thông tin
             </p>
